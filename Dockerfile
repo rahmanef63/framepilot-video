@@ -12,6 +12,9 @@ FROM base AS builder
 ARG NEXT_PUBLIC_CONVEX_URL
 ENV NEXT_PUBLIC_CONVEX_URL=$NEXT_PUBLIC_CONVEX_URL
 ENV NEXT_TELEMETRY_DISABLED=1
+# Fail loud if the deploy forgot the buildArg — otherwise `undefined` bakes into the client
+# and ConvexReactClient throws at module eval → every route 500s on an otherwise-green build.
+RUN test -n "$NEXT_PUBLIC_CONVEX_URL" || (echo "ERROR: NEXT_PUBLIC_CONVEX_URL build arg required" >&2; exit 1)
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public && npm run build

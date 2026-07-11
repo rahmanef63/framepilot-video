@@ -1,10 +1,19 @@
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Password],
+  providers: [
+    Password({
+      // ponytail: enforce exactly the "8+ characters" the sign-in UI promises — no more.
+      validatePasswordRequirements: (password: string) => {
+        if (password.length < 8) {
+          throw new ConvexError("Password must be at least 8 characters.");
+        }
+      },
+    }),
+  ],
 });
 
 export const loggedInUser = query({
